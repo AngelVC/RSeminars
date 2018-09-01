@@ -1,0 +1,243 @@
+---
+title: "Manejo de datos con R: Sintaxis básica"
+output: html_notebook
+---
+Welcome to R! R is a language which will allow you to easily work with data and automate tasks for analysis of data. Like in any othe programming language, we give instructions to R using commands. These are words which tell R what to do with the data you give it (input) and what to return as result (output). These so called "functions" come together in "packages". 
+
+Packages are nothing more than a bundle of useful functions, typicallly used for a specific set of tasks such as "working with DNA sequences" or "reading and creating excel files". You can find lots of useful packges on CRAN (for general packages) and on Bioconductor (for packages related to genomics).
+
+We usually install packges from the command line:
+
+```{r}
+install.packages("seqinr")   # Installing the package seqinr
+library(seqinr)                   
+```
+We specify the name of the package to install within quotation marks. R will look for it on CRAN and download it to your R folder. It may download other packages which are specified by your desired package in order to work properly, as well.
+
+When we install packages from Bioconductor, it's a little bit trickier:
+
+```{r}
+source("https://bioconductor.org/biocLite.R") # Installing Bioconductor Installer
+biocLite()
+
+biocLite("GenomicRanges")                 # Installing the GenomicRanges package
+```
+
+Most packages are not loaded by default. While you only have to install a package once (unless you want to update it), you need to load it each time you start a new R session. This is done with library()
+
+```{r}
+library(seqinr)
+library(GenomicRanges)
+```
+
+We have already talked about functions. R syntax consist basically of functions and objects. As we established, functions are recipes. On the other hand, objects are the containers of our data. Data comes in many shapes, so R has different ways to store data tailored to different kinds of information. These are the objects, which are going to be the focus of the next part.
+
+When we work with objects, we usually give them a name so we can abstract objects and make our code more readable. This is what we call a "variable". We create variables using the assigment operator <-
+
+```{r}
+name <- "Angel"
+surnames = c("Vergara", "Cruces")  
+```
+
+We can use = to assign variables, but <- is preferred and much more common in R code.
+
+Let's adress now the different "atomic" classes. As their name suggests, these are the "atoms" that make up the rest of the objects. We can have numbers ("numeric" or "integer"), words (called "character") and logicals (TRUE or FALSE).
+ 
+
+```{r}
+"actg"; typeof("actg")   # typeof() gives us the type of object we give it
+
+```
+
+Keep in mind that we use quotation marks when we mean words as data, in order to distinguish these from R commands.
+
+```{r}
+1L ; typeof(1L)       
+1; typeof(1)
+
+1 + 6                 # We can use R as a calculator
+```
+
+L specifies an integer. Note that when we write just 1, R interprets 1.0, a decimal.
+
+```{r}
+TRUE ; typeof(TRUE)
+```
+
+In general, we will obtain logical values when we perform other operations. Most of the time, we will be comparing other objects. The output of whether the condition we impose is fulfilled will be a logical value.
+
+```{r}
+1 == 2    # A single = has the meaning of assignment, so we write two =
+1 < 2     # Normal math operators work in R
+1 > 2
+3 <= 5    # Less than or equal to
+8 >= 63   # Greater than or equal to
+```
+
+In addition, we can employ boolean operators (OR, AND) to join different conditions
+
+```{r}
+1 == 2 | 1 < 2    # OR: if either of the conditions is TRUE, result is TRUE
+
+3 <= 5 & 8 >= 63  # AND: Only if both conditions are met the result is TRUE
+```
+
+We can organise these atomic objects in different structures: vectors, lists, matrices and dataframes.
+
+Vectors are a sucession of atomic elements of the same class. If you mix classes, you might get unexpected results
+
+```{r}
+c("a", "c", "c", "t"); 1:9
+
+c("a", "b", 3)
+
+c(0, 1, 3, TRUE)
+```
+
+An object can be turned into a different class, something known as coercion. R has some sensible rules to do this and we must be aware of them to avoid unwanted changes.
+
+We can do explicit coercion too
+
+```{r}
+as.numeric(c("a", "b", 3))
+as.logical(c(0, 1, 3, T))            # We can abbreviate words in R: T = TRUE
+as.character(c(0, 1, 3, TRUE)); as.character(TRUE)
+```
+
+NA or "Not available" are returned when R does not know how to coerce your an element and it also warns us of this fact. We should aim to avoid NAs, as they tend to indicate that something you did was wrong or, at the very least, unexpected
+
+Unlike vectors, lists are objects where we can store different classes of objects, even vectors themselves can be an element of a list.
+
+```{r}
+list("a", 1, c("a", "c", "c", "t"), c(1, 2, 5, 67))
+```
+
+Factors are special vectors to obtain occurences of a series of possible outcomes ("levels").
+
+```{r}
+factor(c("a", "c", "c", "t"), levels = c("a", "c", "t", "g"))
+```
+
+Matrices are vectors with a dimension attribute. The dimension attribute is itself an integer vector of length 2 (number of rows, number of columns)
+
+```{r}
+matrix(c(3, 6, 47, 6, 4, 32, 0, 10, 8), nrow = 3, ncol = 3) 
+```
+
+Dataframes are lists where each element has the same length, conforming a table. They are a very powerful object that we will frequently use to store our data.
+
+```{r}
+genes <- c("CMT3", "AL1", "PCNA")
+positions = c(6, 44, 32)
+strand = factor(c("+", "-", "+"))
+
+data.frame(Gene = genes, Pos = positions, Strand = strand)
+```
+
+Now that we have been introduced the basic types of objects, let's see how we can actually work with them on R. First, it is important to know how to refer to certain elements within an object.
+
+```{r}
+genes[1:3]; genes[c(TRUE, FALSE, TRUE)] # Vectors use brackets []
+
+my.list.of.genes <- list(Gene = genes, Pos = positions, Strand = strand)
+# We use [] to return a sublist
+my.list.of.genes[2]; typeof(my.list.of.genes[2]) 
+
+# We use [[]] to return the element itself
+my.list.of.genes[[2]]; typeof(my.list.of.genes[[2]]) 
+
+
+my.dataframe.of.genes = as.data.frame(my.list.of.genes)
+my.dataframe.of.genes[1, c(1,3)]
+my.dataframe.of.genes[1:2]
+my.dataframe.of.genes[[1]] 
+
+```
+
+We can also use names for the elements inside an object and use them to return said elements later. We give names using names(). We call elements by their name using brackets or the $ sign for lists.
+
+```{r}
+names(genes) = genes
+genes["CMT3"]
+
+my.list.of.genes["Gene"]
+my.list.of.genes[["Gene"]]
+my.list.of.genes$Gene
+
+my.dataframe.of.genes ["Pos"]
+my.dataframe.of.genes [["Pos"]]
+my.dataframe.of.genes$Pos
+```
+
+También es posible ejecutar operaciones con objetos
+
+```{r}
+positions
+length(positions)
+which(positions == 32); which(positions > 10)
+
+vector_ex <- c(rep(1, 4), rep(10,2), rep(3,3)); print(vector_ex) 
+table(vector_ex)
+sort(vector_ex); sort(vector_ex, decreasing = TRUE)
+sum(vector_ex)
+
+max(vector_ex); min(vector_ex)
+which.max(vector_ex); which(vector_ex == max(vector_ex))
+
+any(vector_ex > 5); all(vector_ex > 5)
+
+
+```
+
+A very important family of functions is the apply() family. Their purpose is to pass all the elements in an object to a function and return an appropriate object as output.
+
+```{r}
+M <- matrix(c(3, 6, 47, 6, 4, 32, 0, 10, 8), nrow = 3, ncol = 3) 
+rows <- apply(X = M, MARGIN = 1, FUN = sum); rownames(M) <- rows
+columns <- apply(M, 2, sum); colnames(M) <- columns
+print(M)
+```
+
+Other apply functions are used with lists or vectors. The specific name of the function determines whether the output will be a list (lapply()) or a vector (sapply()).
+
+```{r}
+lapply(my.list.of.genes, length); typeof(.Last.value)
+sapply(my.list.of.genes, length); typeof(.Last.value)
+```
+
+
+SUGGESTED PRACTICE
+
+TASK 1:
+
+1. Get a FASTA file with several sequences, otherwise it will be boring.
+
+
+2. Read it into R
+
+```{r}
+install.packages("seqinr")   # Install seqinr if you do not have it installed
+library(seqinr)              # Load seqinr
+my.fasta <- read.fasta("yourfile.fasta") # Read fasta and store in a variable
+```
+
+
+3. Which is the third sequence?
+
+4. Get the bases 10 to 50 and 66 from the sixth sequence.
+
+5. How many "A" are there in sequece four?
+
+6. Create a list with the length of each sequence. Create a vector with the length of each sequence (Hint you have to use functions from the apply() family). Which sequence is the longest one.
+
+TASK 2
+
+1. Load the iris dataset. This generates a dataframe in your environment with the name "iris". 
+
+```{r}
+data("iris"); iris
+```
+
+2. Create 5 vectors to store each of the columns (Sepal.Length, Sepal.Width...)
+3. How many of the flowers have a sepal length bigger than 5.0 cm and sepals wider than 3.0 cm ?
+4. How many flowers do you have of each species? What's the distribution of the frequency of petal widths? You can plot your findings by putting this information inside a variable and calling plot(petal.width.distribution)
